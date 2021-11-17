@@ -2,9 +2,9 @@
   <div class="home">
     <h1>{{ message }}</h1>
     <p>Place Name:</p>
-    <input type="text" v-model="newPlaceParams.name" />
+    <input type="string" v-model="newPlaceParams.name" />
     <p>Address:</p>
-    <input type="text" v-model="newPlaceParams.address" />
+    <input type="string" v-model="newPlaceParams.address" />
     <p></p>
     <ul>
       <li v-for="error in errors" v-bind:key="error">{{ error }}</li>
@@ -38,13 +38,70 @@
 <style></style>
 
 <script>
+const axios = require("axios");
+
+
 export default {
   data: function () {
     return {
-      message: "Welcome to Vue.js!",
+      message: "So many places!",
+      places: [],
+      newPlaceParams: {},
+      currentPlace: {},
+      errors: [],
     };
   },
-  created: function () {},
-  methods: {},
+  created: function () {
+    this.indexPlaces();
+  },
+ indexPlaces: function () {
+      axios
+        .get("http://localhost:3000/places")
+        .then((response) => {
+          this.places = response.data;
+        })
+        .catch((error) => {
+          this.errors = error.response.data.errors;
+        });
+    },
+    createPlace: function () {
+      axios
+        .post("http://localhost:3000/places", this.newPlaceParams)
+        .then((response) => {
+          console.log(response.data);
+          this.places.push(response.data);
+        })
+        .catch((error) => {
+          this.errors = error.response.data.errors;
+        });
+    },
+    showPlace: function (place) {
+      this.currentPlace = place;
+      console.log(place);
+      document.querySelector("#place-details").showModal();
+    },
+    updatePlace: function (place) {
+      axios
+        .patch("http://localhost:3000/places/" + place.id, place)
+        .then((response) => {
+          console.log("Place Created", response.data);
+        })
+        .catch((error) => {
+          this.errors = error.response.data.errors;
+        });
+    },
+    destroyPlace: function (place) {
+      axios
+        .delete("http://localhost:3000/places/" + place.id)
+        .then((response) => {
+          console.log("Place Destroyed", response.data);
+          var index = this.places.indexOf(place);
+          this.places.splice(index, 1);
+        })
+        .catch((error) => {
+          this.errors = error.response.data.errors;
+        });
+    },
+  },
 };
 </script>
